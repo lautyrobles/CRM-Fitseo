@@ -1,0 +1,268 @@
+/* ===== Contenedor principal ===== */
+.planesContainer {
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  margin: 0 auto;
+  margin-left: 20px;
+  font-family: "Inter", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Encabezado ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #263640;
+  margin: 0;
+}
+
+.header p {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ===== Botones principales ===== */
+.btnCrear {
+  background: #263640;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.btnCrear:hover {
+  background: #324754;
+}
+
+.btnBloqueado {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 🟥 Botón de cancelar edición (igual al de CustomersTable) */
+.btnEliminar {
+  background-color: #e34c67;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btnEliminar:hover {
+  background-color: #cc3b55;
+}
+
+/* ===== Formularios ===== */
+.formContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  background: #f8fafb;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.formContainer input,
+.formContainer select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.formContainer input:focus,
+.formContainer select:focus {
+  border-color: #263640;
+}
+
+.btnConfirmar {
+  grid-column: span 2;
+  background: #1d9a6c;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.btnConfirmar:hover {
+  background: #17885e;
+}
+
+/* ===== Tabla ===== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.table th {
+  background: #263640;
+  color: #fff;
+  text-align: left;
+  padding: 10px;
+  font-weight: 500;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.table tr:hover {
+  background: #f9fafb;
+}
+
+/* ===== Estados visuales ===== */
+.active {
+  color: #1d9a6c;
+  font-weight: 600;
+}
+
+.inactive {
+  color: #c0392b;
+  font-weight: 600;
+}
+
+/* ===== Botones secundarios ===== */
+.btnEditar,
+.btnEstado {
+  background: #e6f0f4;
+  border: none;
+  color: #263640;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-right: 6px;
+}
+
+.btnEditar:hover {
+  background: #d4e4eb;
+}
+
+.btnEstado {
+  background: #f5f5f5;
+}
+
+.btnEstado:hover {
+  background: #e0e0e0;
+}
+
+/* ===== Placeholder (sin planes) ===== */
+.placeholderBox {
+  margin-top: 20px;
+  border: 2px dashed #ccc;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  color: #888;
+}
+
+/* ===== Toasts ===== */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toastSuccess {
+  background: #1d9a6c;
+}
+
+.toastError {
+  background: #c0392b;
+}
+
+/* ===== Loader general ===== */
+.loaderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  color: #263640;
+  gap: 12px;
+}
+
+.loader {
+  border: 4px solid #e5e5e5;
+  border-top: 4px solid #28b16d;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ✏️ Fila en edición */
+.editingRow {
+  background-color: #e8f0ff !important;
+  transition: background-color 0.3s ease;
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 768px) {
+  .formContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .table th,
+  .table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .btnConfirmar {
+    grid-column: span 1;
+  }
+
+  .btnEliminar,
+  .btnCrear {
+    width: 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

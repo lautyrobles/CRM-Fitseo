@@ -1,0 +1,20 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+}
+
+.header h2 {
+  font-weight: 600;
+}
+
+/* .search {
+  background-color: #e2e4e7;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  width: 220px;
+  outline: none;
+  font-weight: 500;
+} */

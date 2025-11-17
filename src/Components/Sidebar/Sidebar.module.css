@@ -1,0 +1,147 @@
+.sidebar {
+  background-color: #263640;
+  color: #fff;
+  width: 250px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.sidebar h3 {
+  font-size: 12px;
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  font-weight: 200;
+  color: lightslategray;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.logo span {
+  color: #6d5dfc;
+}
+
+.nav {
+  margin-top: 40px;
+}
+
+.nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e5e5e5;
+  text-decoration: none;
+  transition: 0.3s ease;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.navItem:hover {
+  background-color: #34485c;
+  color: #fff;
+}
+
+/* Enlace activo (mantiene tu estilo violeta) */
+.active {
+  background-color: #6d5dfc;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(109, 93, 252, 0.3);
+}
+
+/* Caja de soporte */
+.proBox {
+  background-color: #34485c;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.proBox p {
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: #e6f0f4;
+}
+
+.proBox button {
+  background-color: #6d5dfc;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.proBox button:hover {
+  background-color: #5b4de0;
+}
+
+/* Usuario */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.userInfo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userTitle h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #fff;
+}
+
+.userTitle span {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.minimalMessage {
+  margin-top: 40px;
+  text-align: center;
+  color: #7c8a97;
+  font-size: 0.9rem;
+}
+
+.logoutBtn {
+  margin-top: 30px;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logoutBtn:hover {
+  background: #c0392b;
+}

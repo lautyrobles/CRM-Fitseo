@@ -1,0 +1,309 @@
+/* Contenedor principal */
+.pagosContainer {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: calc(100% - 0px);      /* 🔹 Ocupa todo el ancho disponible como Configuración */
+  margin: 20px auto;
+  margin-left: 20px;            /* 🔹 Deja el mismo margen respecto al sidebar */
+  font-family: "Inter", sans-serif;
+  color: #263640;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+/* Toasts */
+.toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+}
+
+.toast {
+  min-width: 240px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: fadeInToast 0.3s ease forwards;
+}
+
+.toastSuccess {
+  background-color: #e6f7ef;
+  border: 1px solid #28b16d;
+  color: #1b9e60;
+}
+
+.toastError {
+  background-color: #ffecec;
+  border: 1px solid #e34c67;
+  color: #e34c67;
+}
+
+@keyframes fadeInToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #7c8a97;
+  margin-top: 2px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Botones */
+.btnPrimary {
+  background-color: #28b16d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background-color: #1f9157;
+}
+
+.btnOutline {
+  background: #ffffff;
+  color: #263640;
+  border: 1px solid #d9e0e6;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btnOutline:hover {
+  background: #f3f6f8;
+  border-color: #c1ccd5;
+}
+
+/* Card contenedora (filtros + tabla) */
+.card {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-top: 16px;
+}
+
+/* Filtros */
+.filtrosContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.filtrosContainer input,
+.filtrosContainer select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  font-size: 13px;
+  min-width: 200px;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+/* Formulario Registrar Pago */
+.formContainer {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 16px 18px 14px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 220px;
+}
+
+.formGroupFull {
+  flex: 1 1 100%;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #263640;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  font-size: 13px;
+  background: #fff;
+  resize: none;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #28b16d;
+  box-shadow: 0 0 0 2px rgba(40, 177, 109, 0.15);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Tabla */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.tablaPagos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.tablaPagos th,
+.tablaPagos td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e5e8ec;
+  text-align: left;
+}
+
+.tablaPagos th {
+  font-weight: 600;
+  color: #263640;
+  font-size: 13px;
+}
+
+.tablaPagos tr:hover {
+  background-color: #f2f5f8;
+}
+
+/* Tags de estado y método */
+.statusPill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pagado {
+  background-color: #e6f7ef;
+  color: #1b9e60;
+}
+
+.pendiente {
+  background-color: #fff7e6;
+  color: #c47f07;
+}
+
+.vencido {
+  background-color: #ffecec;
+  color: #e34c67;
+}
+
+.metodoTag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: #e6f0f4;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+/* Placeholder */
+.placeholderBox {
+  margin-top: 20px;
+  border: 2px dashed #ccc;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  color: #888;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pagosContainer {
+    margin-left: 0;
+    padding: 18px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .formRow {
+    flex-direction: column;
+  }
+
+  .filtrosContainer {
+    flex-direction: column;
+  }
+
+  .formActions {
+    justify-content: center;
+  }
+}

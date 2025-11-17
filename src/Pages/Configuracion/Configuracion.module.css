@@ -1,0 +1,328 @@
+/* 🧱 Contenedor principal */
+.configContainer {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: calc(100% - 0px);
+  margin: 20px auto;
+  margin-left: 20px;
+  font-family: "Inter", sans-serif;
+  color: #263640;
+  max-height: calc(80vh - 40px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* 🟢 Toasts flotantes */
+.toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  z-index: 2000;
+}
+
+
+.toast {
+  min-width: 240px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 1; /* 🔹 fuerza visibilidad */
+  transform: translateY(0);
+  transition: all 0.3s ease-in-out;
+  animation: fadeInToast 0.3s ease forwards;
+}
+
+.toastSuccess {
+  background-color: #e6f7ef;
+  border: 1px solid #28b16d;
+  color: #1b9e60;
+}
+
+.toastError {
+  background-color: #ffecec;
+  border: 1px solid #e34c67;
+  color: #e34c67;
+}
+
+/* 🧭 Encabezado */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* 🟩 Botón principal */
+.btnCrear {
+  background-color: #28b16d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.btnCrear:hover {
+  background-color: #1e965a;
+}
+
+/* 🧾 Formulario */
+.formContainer {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; /* 🔹 distribuye en todo el ancho */
+  align-items: flex-start;
+  gap: 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  width: 100%; /* 🔹 ocupa todo el ancho del contenedor padre */
+  box-sizing: border-box;
+}
+
+/* 🔤 Inputs y select */
+.formContainer input,
+.formContainer select {
+  flex: 1 1 230px;
+  min-width: 220px;
+  padding: 8px 10px;
+  height: 38px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  font-size: 13.5px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.formContainer input:focus,
+.formContainer select:focus {
+  border-color: #28b16d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(40, 177, 109, 0.15);
+}
+
+/* ❌ Input inválido */
+.inputError {
+  border-color: #e34c67 !important;
+  box-shadow: 0 0 3px rgba(227, 76, 103, 0.3);
+  animation: shake 0.25s ease-in-out;
+}
+
+/* ⚠️ Mensaje de error inline */
+.errorInline {
+  width: 100%;
+  font-size: 12.5px;
+  color: #e34c67;
+  margin-top: 4px; /* 🔹 más distancia desde el input */
+  margin-bottom: 6px; /* 🔹 más separación hacia el siguiente campo */
+  line-height: 1.3;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* 🔘 Botón confirmar */
+.btnConfirmar {
+  background-color: #263640;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 500;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: 38px; /* 🔹 mismo alto que los inputs */
+  flex: 1 1 230px; /* 🔹 mismo tamaño base */
+  min-width: 220px;
+  margin-top: 8px;
+}
+
+.btnConfirmar:hover {
+  background-color: #1b2933;
+}
+
+/* 📋 Tabla */
+.tablaUsuarios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 13.5px;
+}
+
+.tablaUsuarios th,
+.tablaUsuarios td {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: left;
+}
+
+.tablaUsuarios th {
+  color: #263640;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.tablaUsuarios tr:hover {
+  background-color: #f9fafb;
+}
+
+/* 🔧 Botones de acción */
+.btnEditar {
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-right: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s ease;
+}
+
+.btnEditar:hover {
+  background-color: #357ac8;
+}
+
+.btnEliminar {
+  background-color: #e34c67;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s ease;
+}
+
+.btnEliminar:hover {
+  background-color: #c93f56;
+}
+
+/* 💬 Placeholder */
+.placeholderBox {
+  margin-top: 16px;
+  border: 2px dashed #ccc;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+/* 📱 Responsive */
+@media (max-width: 768px) {
+  .formContainer {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .formContainer input,
+  .formContainer select,
+  .btnConfirmar {
+    flex: 1 1 100%;
+    width: 90%;
+  }
+
+  .tablaUsuarios th,
+  .tablaUsuarios td {
+    font-size: 12.5px;
+    padding: 8px;
+  }
+}
+
+/* 🧩 Campos nombre y apellido juntos */
+.formContainer input[name="nombre"],
+.formContainer input[name="apellido"] {
+  flex: 1 1 48%;
+}
+
+/* 🌀 Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+.toastError {
+  background-color: #ffecec;
+  border: 1px solid #e34c67;
+  color: #e34c67;
+}
+.toastSuccess {
+  background-color: #e6f7ef;
+  border: 1px solid #28b16d;
+  color: #1b9e60;
+}
+
+@keyframes fadeInToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toastSuccess {
+  background-color: #e6f7ef;
+  border: 1px solid #28b16d;
+  color: #1b9e60;
+}
+
+.toastError {
+  background-color: #ffecec;
+  border: 1px solid #e34c67;
+  color: #e34c67;
+}
+
+/* 🔵 Fila que está siendo editada */
+.rowEditing {
+  background-color: #e6f0f4 !important;
+  transition: background-color 0.3s ease;
+}
+
+.loaderContainer {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+

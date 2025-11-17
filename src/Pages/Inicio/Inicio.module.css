@@ -1,0 +1,25 @@
+.inicioContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%; /* ← clave */
+  margin-left: 20px;
+}
+
+.statsSection {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%; /* ← clave */
+}
+
+.statsSection > div {
+  flex: 1;
+  min-width: 280px; /* para responsive */
+}
+
+/* Si querés mantener un fondo uniforme detrás */
+/* .inicioContainer section {
+  background: transparent;
+} */
