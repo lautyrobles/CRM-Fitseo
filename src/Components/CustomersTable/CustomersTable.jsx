@@ -22,7 +22,7 @@ const CustomersTable = () => {
 
   const itemsPerPage = mostrarFormulario ? 6 : 7;
 
-  // 🔹 Estado inicial → AHORA INCLUYE CONTRASEÑA
+  // 🔹 Estado inicial SIN CONTRASEÑA
   const [nuevoUsuario, setNuevoUsuario] = useState({
     document: "",
     name: "",
@@ -31,7 +31,6 @@ const CustomersTable = () => {
     phoneNumber: "",
     isActive: true,
     idPlan: "",
-    password: "", // ⬅️ NUEVO CAMPO
   });
 
   /* ===================================================
@@ -69,7 +68,6 @@ const CustomersTable = () => {
       phoneNumber: "",
       isActive: true,
       idPlan: "",
-      password: "", // ⬅️ reset
     });
   };
 
@@ -113,11 +111,6 @@ const CustomersTable = () => {
       return false;
     }
 
-    if (editIndex === null && !nuevoUsuario.password) {
-      mostrarToast("⚠️ La contraseña es obligatoria.", "error");
-      return false;
-    }
-
     return true;
   };
 
@@ -141,10 +134,7 @@ const CustomersTable = () => {
         currentPlan: { idPlan: parseInt(nuevoUsuario.idPlan) },
       };
 
-      // 🆕 Solo enviar contraseña si se escribió una
-      if (nuevoUsuario.password && nuevoUsuario.password.trim() !== "") {
-        clienteBody.password = nuevoUsuario.password;
-      }
+      // 🚫 YA NO SE ENVÍA CONTRASEÑA
 
       if (editIndex !== null) {
         const usuarioEditado = usuarios[editIndex];
@@ -185,7 +175,6 @@ const CustomersTable = () => {
       phoneNumber: cliente.phoneNumber,
       isActive: cliente.status === "Activo",
       idPlan: planSeleccionado,
-      password: "", // ← SIEMPRE LIMPIO
     });
 
     setEditIndex(index);
@@ -286,18 +275,7 @@ const CustomersTable = () => {
                   onChange={handleChange}
                 />
 
-                {/* Campo contraseña */}
-                <input
-                  type="password"
-                  name="password"
-                  placeholder={
-                    editIndex !== null
-                      ? "Nueva contraseña (opcional)"
-                      : "Contraseña"
-                  }
-                  value={nuevoUsuario.password}
-                  onChange={handleChange}
-                />
+                {/* 🚫 Campo contraseña ELIMINADO */}
 
                 <select
                   name="idPlan"

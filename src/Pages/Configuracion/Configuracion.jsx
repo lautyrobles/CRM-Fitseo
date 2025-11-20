@@ -11,21 +11,22 @@ import { useAuth } from "../../context/AuthContext";
 
 const Configuracion = () => {
   const { user } = useAuth();
+
+  // Usuario persistido
   const storedUser = JSON.parse(localStorage.getItem("fitseoUser") || "null");
 
-  // -----------------------------------------------------
-  // 🔹 OBTENER ROL ACTUAL
-  // -----------------------------------------------------
-  const currentUserRole =
-    user?.roles?.[0] ||
-    storedUser?.roles?.[0] ||
-    user?.role ||
-    storedUser?.role ||
-    "";
+  /* ===================================================
+      🔹 Normalizar rol (ROLE_SUPER_ADMIN → SUPER_ADMIN)
+     =================================================== */
+  const normalizeRole = (r) =>
+    r ? r.replace("ROLE_", "").toUpperCase() : "";
 
-  // -----------------------------------------------------
-  // 🔹 ESTADOS
-  // -----------------------------------------------------
+  const currentUserRole =
+    normalizeRole(user?.role) || normalizeRole(storedUser?.role) || "";
+
+  /* ===================================================
+      🔹 Estados
+     =================================================== */
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,28 +45,12 @@ const Configuracion = () => {
     tipo: "",
   });
 
-  // -----------------------------------------------------
-  // 🔹 MAPEOS ROL <-> TIPO (Frontend)
-  // -----------------------------------------------------
-  const mapTipoToRole = (tipo) => {
-    switch (tipo) {
-      case "Super Admin":
-        return "SUPER_ADMIN";
-      case "Admin":
-        return "ADMIN";
-      case "Encargado":
-        return "SUPERVISOR";
-      default:
-        return null;
-    }
-  };
-
-  const mapRoleToTipo = (role) => {
-    if (!role) return "Usuario";
-
-    const normalized = role.toUpperCase();
-
-    switch (normalized) {
+  /* ===================================================
+      🔹 Mapear rol → etiqueta UI
+     =================================================== */
+  const mapRoleToTipo = (roleRaw) => {
+    const role = normalizeRole(roleRaw);
+    switch (role) {
       case "SUPER_ADMIN":
         return "Super Admin";
       case "ADMIN":
@@ -79,9 +64,25 @@ const Configuracion = () => {
     }
   };
 
-  // -----------------------------------------------------
-  // 🔹 PERMISOS PARA CREAR USUARIOS
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Mapear UI → rol API
+     =================================================== */
+  const mapTipoToRole = (tipo) => {
+    switch (tipo) {
+      case "Super Admin":
+        return "SUPER_ADMIN";
+      case "Admin":
+        return "ADMIN";
+      case "Encargado":
+        return "SUPERVISOR";
+      default:
+        return null;
+    }
+  };
+
+  /* ===================================================
+      🔹 Qué roles puede crear este usuario
+     =================================================== */
   const getAllowedTipos = () => {
     switch (currentUserRole) {
       case "SUPER_ADMIN":
@@ -89,7 +90,7 @@ const Configuracion = () => {
       case "ADMIN":
         return ["Encargado"];
       case "SUPERVISOR":
-        return []; // no puede crear
+        return []; 
       default:
         return [];
     }
@@ -98,9 +99,9 @@ const Configuracion = () => {
   const allowedTipos = getAllowedTipos();
   const canCreateProfiles = allowedTipos.length > 0;
 
-  // -----------------------------------------------------
-  // 🔹 TOASTS
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Toasts
+     =================================================== */
   const mostrarToast = (texto, tipo = "success") => {
     if (tipo === "success") {
       setSuccess(texto);
@@ -115,15 +116,21 @@ const Configuracion = () => {
     }, 4000);
   };
 
-  // -----------------------------------------------------
-  // 🔹 CARGAR USUARIOS
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Obtener usuarios desde backend
+     =================================================== */
   useEffect(() => {
     const cargar = async () => {
       try {
         const data = await getUsers();
-        setUsuarios(data);
-      } catch {
+        setUsuarios(
+          data.map((u) => ({
+            ...u,
+            normalizedRole: normalizeRole(u.role),
+          }))
+        );
+      } catch (e) {
+        console.error(e);
         mostrarToast("Error al cargar usuarios", "error");
       } finally {
         setLoading(false);
@@ -132,6 +139,9 @@ const Configuracion = () => {
     cargar();
   }, []);
 
+  /* ===================================================
+      🔹 Form handlers
+     =================================================== */
   const limpiarFormulario = () => {
     setNuevoUsuario({
       nombre: "",
@@ -146,9 +156,6 @@ const Configuracion = () => {
     setEditUserId(null);
   };
 
-  // -----------------------------------------------------
-  // 🔹 VALIDACIONES
-  // -----------------------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNuevoUsuario((prev) => ({ ...prev, [name]: value }));
@@ -160,10 +167,10 @@ const Configuracion = () => {
       nuevoUsuario;
 
     const newErrors = {};
-
     if (!nombre) newErrors.nombre = "El nombre es obligatorio.";
     if (!apellido) newErrors.apellido = "El apellido es obligatorio.";
-    if (!nombreUsuario) newErrors.nombreUsuario = "El usuario es obligatorio.";
+    if (!nombreUsuario)
+      newErrors.nombreUsuario = "El usuario es obligatorio.";
     if (!email) newErrors.email = "El correo es obligatorio.";
     if (!tipo) newErrors.tipo = "Seleccioná un rol.";
     if (!editUser && !password)
@@ -173,9 +180,9 @@ const Configuracion = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // -----------------------------------------------------
-  // 🔹 CREAR / EDITAR USUARIO
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Crear / actualizar usuario
+     =================================================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validarCampos()) return;
@@ -184,12 +191,13 @@ const Configuracion = () => {
       const apiRole = mapTipoToRole(nuevoUsuario.tipo);
 
       if (editUser) {
+        // EDITAR
         await updateUser(editUser.id, {
           name: nuevoUsuario.nombre,
           lastName: nuevoUsuario.apellido,
           username: nuevoUsuario.nombreUsuario,
           email: nuevoUsuario.email,
-          role: editUser.roles?.[0] || editUser.role,
+          role: editUser.normalizedRole,
         });
 
         setUsuarios((prev) =>
@@ -208,6 +216,7 @@ const Configuracion = () => {
 
         mostrarToast("Usuario actualizado correctamente");
       } else {
+        // CREAR
         const created = await registerUser(
           nuevoUsuario.nombre,
           nuevoUsuario.apellido,
@@ -217,7 +226,11 @@ const Configuracion = () => {
           apiRole
         );
 
-        setUsuarios((prev) => [...prev, created]);
+        setUsuarios((prev) => [
+          ...prev,
+          { ...created, normalizedRole: normalizeRole(created.role) },
+        ]);
+
         mostrarToast("Usuario creado correctamente");
       }
 
@@ -228,10 +241,12 @@ const Configuracion = () => {
     }
   };
 
-  // -----------------------------------------------------
-  // 🔹 ELIMINAR USUARIO
-  // -----------------------------------------------------
-  const handleDelete = async (id, role) => {
+  /* ===================================================
+      🔹 Eliminar usuario
+     =================================================== */
+  const handleDelete = async (id, roleRaw) => {
+    const role = normalizeRole(roleRaw);
+
     if (!window.confirm("¿Seguro que querés eliminar esta cuenta?")) return;
 
     if (currentUserRole === "SUPERVISOR")
@@ -244,23 +259,26 @@ const Configuracion = () => {
       return mostrarToast("No podés eliminar este usuario", "error");
 
     if (currentUserRole === "SUPER_ADMIN" && role === "SUPER_ADMIN")
-      return mostrarToast("No podés eliminar otro Super Admin", "error");
+      return mostrarToast(
+        "No podés eliminar otro usuario Super Admin",
+        "error"
+      );
 
     try {
       await deleteUser(id);
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
       mostrarToast("Usuario eliminado correctamente");
-    } catch {
+    } catch (err) {
       mostrarToast("Error al eliminar usuario", "error");
     }
   };
 
-  // -----------------------------------------------------
-  // 🔹 HABILITAR / DESHABILITAR
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Habilitar / deshabilitar usuario
+     =================================================== */
   const handleToggleEnabled = async (u) => {
+    const role = normalizeRole(u.role);
     const newStatus = !u.enabled;
-    const role = u.roles?.[0] || u.role;
 
     if (u.id === user.id)
       return mostrarToast("No podés modificarte a vos mismo", "error");
@@ -268,28 +286,32 @@ const Configuracion = () => {
     if (currentUserRole === "SUPERVISOR")
       return mostrarToast("No tenés permisos", "error");
 
-    if (currentUserRole === "ADMIN" && ["ADMIN", "SUPER_ADMIN"].includes(role))
+    if (
+      currentUserRole === "ADMIN" &&
+      ["ADMIN", "SUPER_ADMIN"].includes(role)
+    )
       return mostrarToast("No podés modificar este usuario", "error");
-
-    if (currentUserRole === "SUPER_ADMIN" && role === "SUPER_ADMIN")
-      return mostrarToast("No podés modificar otro Super Admin", "error");
 
     try {
       await toggleUserStatus(u.id, newStatus);
 
       setUsuarios((prev) =>
-        prev.map((x) => (x.id === u.id ? { ...x, enabled: newStatus } : x))
+        prev.map((x) =>
+          x.id === u.id ? { ...x, enabled: newStatus } : x
+        )
       );
 
-      mostrarToast(newStatus ? "Usuario habilitado" : "Usuario deshabilitado");
+      mostrarToast(
+        newStatus ? "Usuario habilitado" : "Usuario deshabilitado"
+      );
     } catch (err) {
       mostrarToast(err.message, "error");
     }
   };
 
-  // -----------------------------------------------------
-  // 🔹 INICIAR EDICIÓN
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Iniciar edición
+     =================================================== */
   const startEdit = (u) => {
     setEditUser(u);
     setEditUserId(u.id);
@@ -300,14 +322,14 @@ const Configuracion = () => {
       apellido: u.lastName,
       email: u.email,
       nombreUsuario: u.username,
-      tipo: mapRoleToTipo(u.roles?.[0] || u.role),
+      tipo: mapRoleToTipo(u.role),
       password: "",
     });
   };
 
-  // -----------------------------------------------------
-  // 🔹 RENDER
-  // -----------------------------------------------------
+  /* ===================================================
+      🔹 Render
+     =================================================== */
   return (
     <>
       {/* TOASTS */}
@@ -346,6 +368,7 @@ const Configuracion = () => {
         {/* FORMULARIO */}
         {mostrarFormulario && (
           <form className={styles.formContainer} onSubmit={handleSubmit}>
+            {/* Nombre */}
             <input
               type="text"
               name="nombre"
@@ -358,6 +381,7 @@ const Configuracion = () => {
               <p className={styles.errorInline}>{errors.nombre}</p>
             )}
 
+            {/* Apellido */}
             <input
               type="text"
               name="apellido"
@@ -370,6 +394,7 @@ const Configuracion = () => {
               <p className={styles.errorInline}>{errors.apellido}</p>
             )}
 
+            {/* Usuario */}
             <input
               type="text"
               name="nombreUsuario"
@@ -379,9 +404,12 @@ const Configuracion = () => {
               className={errors.nombreUsuario ? styles.inputError : ""}
             />
             {errors.nombreUsuario && (
-              <p className={styles.errorInline}>{errors.nombreUsuario}</p>
+              <p className={styles.errorInline}>
+                {errors.nombreUsuario}
+              </p>
             )}
 
+            {/* Email */}
             <input
               type="email"
               name="email"
@@ -394,6 +422,7 @@ const Configuracion = () => {
               <p className={styles.errorInline}>{errors.email}</p>
             )}
 
+            {/* Contraseña */}
             {!editUser && (
               <>
                 <input
@@ -405,11 +434,14 @@ const Configuracion = () => {
                   className={errors.password ? styles.inputError : ""}
                 />
                 {errors.password && (
-                  <p className={styles.errorInline}>{errors.password}</p>
+                  <p className={styles.errorInline}>
+                    {errors.password}
+                  </p>
                 )}
               </>
             )}
 
+            {/* Rol */}
             <select
               name="tipo"
               value={nuevoUsuario.tipo}
@@ -454,29 +486,31 @@ const Configuracion = () => {
 
             <tbody>
               {usuarios.map((u) => {
-                const role = u.roles?.[0] || u.role;
+                const realRole = normalizeRole(u.role);
 
                 const canEdit =
-                  u.id === user.id || // Puede editarse a sí mismo
+                  u.id === user.id ||
                   currentUserRole === "SUPER_ADMIN" ||
                   (currentUserRole === "ADMIN" &&
-                    ["SUPERVISOR", "USER"].includes(role));
+                    ["SUPERVISOR", "USER"].includes(realRole));
 
                 const canDelete =
                   currentUserRole === "SUPER_ADMIN" &&
-                  role !== "SUPER_ADMIN" &&
+                  realRole !== "SUPER_ADMIN" &&
                   u.id !== user.id;
 
                 return (
                   <tr
                     key={u.id}
-                    className={editUserId === u.id ? styles.rowEditing : ""}
+                    className={
+                      editUserId === u.id ? styles.rowEditing : ""
+                    }
                   >
                     <td>{u.name}</td>
                     <td>{u.lastName}</td>
                     <td>{u.username}</td>
                     <td>{u.email}</td>
-                    <td>{mapRoleToTipo(role)}</td>
+                    <td>{mapRoleToTipo(realRole)}</td>
 
                     <td>
                       {canEdit && (
@@ -491,7 +525,7 @@ const Configuracion = () => {
                       {(currentUserRole === "SUPER_ADMIN" ||
                         currentUserRole === "ADMIN") &&
                         u.id !== user.id &&
-                        ["SUPERVISOR", "USER"].includes(role) && (
+                        ["SUPERVISOR", "USER"].includes(realRole) && (
                           <button
                             style={{
                               backgroundColor: u.enabled
@@ -514,7 +548,7 @@ const Configuracion = () => {
                       {canDelete && (
                         <button
                           className={styles.btnEliminar}
-                          onClick={() => handleDelete(u.id, role)}
+                          onClick={() => handleDelete(u.id, realRole)}
                         >
                           Eliminar
                         </button>

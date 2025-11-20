@@ -1,24 +1,25 @@
 // src/assets/services/planesService.js
 import api from "./api";
 
-// 🟢 Obtener todos los planes
+/* =========================================
+   🟢 OBTENER TODOS LOS PLANES
+========================================= */
 export const obtenerPlanes = async () => {
   try {
     const res = await api.get("/plans");
-    console.log("✅ Planes obtenidos:", res.data);
-    return res.data;
+    return res.data; // Backend devuelve: [{ idPlan, namePlan, status, ... }]
   } catch (error) {
     console.error("❌ Error al obtener planes:", error.response?.data || error.message);
     throw error;
   }
 };
 
-// 🟡 Crear un nuevo plan
+/* =========================================
+   🟡 CREAR UN PLAN
+========================================= */
 export const crearPlan = async (plan) => {
   try {
-    console.log("📦 Enviando plan al backend:", plan);
     const res = await api.post("/plans", plan);
-    console.log("✅ Plan creado:", res.data);
     return res.data;
   } catch (error) {
     console.error("❌ Error al crear plan:", error.response?.data || error.message);
@@ -26,37 +27,48 @@ export const crearPlan = async (plan) => {
   }
 };
 
-// 🟠 Actualizar un plan existente
+/* =========================================
+   🟠 ACTUALIZAR PLAN
+========================================= */
 export const actualizarPlan = async (id, plan) => {
   try {
-    console.log(`✏️ Actualizando plan con ID ${id}:`, plan);
     const res = await api.put(`/plans/${id}`, plan);
-    console.log("✅ Plan actualizado:", res.data);
     return res.data;
   } catch (error) {
-    console.error(`❌ Error al actualizar plan ${id}:`, error.response?.data || error.message);
+    console.error("❌ Error al actualizar plan:", error.response?.data || error.message);
     throw error;
   }
 };
 
-// 🟣 Cambiar el estado de un plan (activo/inactivo)
+/* =========================================
+   🟣 CAMBIAR ESTADO
+   ⚠️ Azure requiere YES/NO en query param:
+   /plans/{id}/status?active=true|false
+========================================= */
 export const cambiarEstadoPlan = async (id, active) => {
   try {
-    console.log(`🔁 Cambiando estado del plan ${id} a ${active ? "Activo" : "Inactivo"}`);
-    const res = await api.patch(`/plans/${id}/status?active=${active}`);
-    console.log("✅ Estado actualizado:", res.data);
+    const booleanStr = active ? "true" : "false";
+
+    console.log(`🔁 Cambiando estado del plan ${id} → ${booleanStr}`);
+
+    const res = await api.patch(`/plans/${id}/status?active=${booleanStr}`);
+
     return res.data;
   } catch (error) {
-    console.error(`❌ Error al cambiar estado del plan ${id}:`, error.response?.data || error.message);
+    console.error(
+      "❌ Error al cambiar estado:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
-// 🔵 Filtrar planes por estado (opcional)
+/* =========================================
+   🔵 FILTRAR POR ESTADO
+========================================= */
 export const filtrarPlanesPorEstado = async (activo = true) => {
   try {
     const res = await api.get(`/plans/filter?active=${activo}`);
-    console.log("✅ Planes filtrados:", res.data);
     return res.data;
   } catch (error) {
     console.error("❌ Error al filtrar planes:", error.response?.data || error.message);

@@ -19,24 +19,25 @@ const Planes = () => {
     hoursEnabled: "",
     value: "",
     notes: "",
-    active: true, // ✔️ backend usa active: boolean
+    active: true,
+    lateFeeAmount: 0, // ✔ requerido pero oculto
   });
 
   const [toast, setToast] = useState({ message: "", type: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  /* ===========================
-        🔹 Obtener planes
-     =========================== */
+  /* ================================
+     🔹 Obtener planes
+     ================================ */
   const fetchPlanes = async () => {
     try {
       setLoading(true);
       const data = await obtenerPlanes();
+      console.log("📌 PLANES DEL BACKEND:", data);
       setPlanes(data);
     } catch (error) {
-      console.error("❌ Error al obtener planes:", error);
-      mostrarToast("Error al cargar los planes", "error");
+      mostrarToast("❌ Error al cargar los planes", "error");
     } finally {
       setLoading(false);
     }
@@ -46,18 +47,15 @@ const Planes = () => {
     fetchPlanes();
   }, []);
 
-  /* ===========================
-        🔹 Form handlers
-     =========================== */
+  /* ================================
+     🔹 Form handlers
+     ================================ */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     setNuevoPlan((prev) => ({
       ...prev,
-      [name]:
-        name === "active"
-          ? value === "true"
-          : value,
+      [name]: name === "active" ? value === "true" : value,
     }));
   };
 
@@ -69,6 +67,7 @@ const Planes = () => {
       value: "",
       notes: "",
       active: true,
+      lateFeeAmount: 0,
     });
     setEditIndex(null);
   };
@@ -97,9 +96,9 @@ const Planes = () => {
     return true;
   };
 
-  /* ===========================
-        🔹 Crear / actualizar
-     =========================== */
+  /* ================================
+     🔹 Crear / Actualizar
+     ================================ */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validarCampos()) return;
@@ -113,7 +112,8 @@ const Planes = () => {
         hoursEnabled: Number(nuevoPlan.hoursEnabled) || 0,
         value: Number(nuevoPlan.value),
         notes: nuevoPlan.notes || "",
-        active: nuevoPlan.active, // ✔ booleano
+        isActive: nuevoPlan.active === true || nuevoPlan.active === "true",
+        lateFeeAmount: 0, // ✔ siempre enviamos 0, sin mostrarlo
       };
 
       if (editIndex !== null) {
@@ -128,30 +128,33 @@ const Planes = () => {
       await fetchPlanes();
       cancelarEdicion();
     } catch (error) {
-      console.error("❌ Error al guardar plan:", error);
-      mostrarToast("❌ Error al guardar el plan.", "error");
+      mostrarToast("❌ Error al guardar el plan", "error");
+      console.error("❌ ERROR SUBMIT:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  /* ===========================
-        🔹 Cambiar estado
-     =========================== */
-  const toggleEstado = async (id, active) => {
+  /* ================================
+     🔹 Cambiar estado
+     ================================ */
+  const toggleEstado = async (id, statusActual) => {
     try {
-      await cambiarEstadoPlan(id, !active);
-      await fetchPlanes();
+      const next = statusActual === "Activo" ? false : true;
+
+      await cambiarEstadoPlan(id, next);
+
       mostrarToast("🔁 Estado actualizado");
+      await fetchPlanes();
     } catch (error) {
-      console.error("❌ Error estado plan:", error);
       mostrarToast("❌ Error al cambiar estado", "error");
+      console.error(error);
     }
   };
 
-  /* ===========================
-        🔹 Editar plan
-     =========================== */
+  /* ================================
+     🔹 Editar plan
+     ================================ */
   const editarPlan = (index) => {
     const p = planes[index];
 
@@ -161,16 +164,17 @@ const Planes = () => {
       hoursEnabled: p.hoursEnabled,
       value: p.value,
       notes: p.notes,
-      active: p.active, // ✔ boolean
+      active: p.status === "Activo",
+      lateFeeAmount: 0, // ✔ siempre oculto
     });
 
     setEditIndex(index);
     setMostrarFormulario(true);
   };
 
-  /* ===========================
-        🔹 Render
-     =========================== */
+  /* ================================
+     🔹 Render
+     ================================ */
   return (
     <section className={styles.planesContainer}>
       {toast.message && (
@@ -206,6 +210,7 @@ const Planes = () => {
         <Loader text="Guardando cambios..." />
       ) : (
         <>
+          {/* FORMULARIO */}
           {mostrarFormulario && (
             <form className={styles.formContainer} onSubmit={handleSubmit}>
               <input
@@ -259,6 +264,7 @@ const Planes = () => {
             </form>
           )}
 
+          {/* TABLA */}
           {planes.length > 0 ? (
             <table className={styles.table}>
               <thead>
@@ -285,28 +291,21 @@ const Planes = () => {
                     <td>{p.notes}</td>
 
                     <td>
-                      <span
-                        className={
-                          p.active ? styles.active : styles.inactive
-                        }
-                      >
-                        {p.active ? "Activo" : "Inactivo"}
+                      <span className={p.status === "Activo" ? styles.active : styles.inactive}>
+                        {p.status}
                       </span>
                     </td>
 
                     <td>
-                      <button
-                        className={styles.btnEditar}
-                        onClick={() => editarPlan(i)}
-                      >
+                      <button className={styles.btnEditar} onClick={() => editarPlan(i)}>
                         Editar
                       </button>
 
                       <button
                         className={styles.btnEstado}
-                        onClick={() => toggleEstado(p.idPlan, p.active)}
+                        onClick={() => toggleEstado(p.idPlan, p.status)}
                       >
-                        {p.active ? "Desactivar" : "Activar"}
+                        {p.status === "Activo" ? "Desactivar" : "Activar"}
                       </button>
                     </td>
                   </tr>
