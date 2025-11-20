@@ -7,9 +7,9 @@ import Sidebar from './Components/Sidebar/Sidebar'
 import Header from './Components/Header/Header'
 
 // 📄 Páginas
-import Inicio from './Pages/Inicio/Inicio'
+import Inicio from './Pages/Inicio/Inicio.jsx';
 import Clientes from './Pages/Clientes/Clientes'
-import Pagos from './pages/Pagos/Pagos'
+import Pagos from './Pages/Pagos/Pagos'
 import Planes from './Pages/Planes/Planes'
 import Configuracion from './pages/Configuracion/Configuracion'
 import Soporte from './Pages/Soporte/Soporte'
