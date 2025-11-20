@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./CustomersTable.module.css";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../Components/Loader/Loader";
 
 import {
   obtenerClientes,
