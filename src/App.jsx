@@ -11,7 +11,7 @@ import Inicio from './Pages/Inicio/Inicio'
 import Clientes from './Pages/Clientes/Clientes'
 import Pagos from './Pages/Pagos/Pagos'
 import Planes from './Pages/Planes/Planes'
-import Configuracion from './pages/Configuracion/Configuracion'
+import Configuracion from './Pages/Configuracion/Configuracion'
 import Soporte from './Pages/Soporte/Soporte'
 import Login from './Pages/Login/Login'
 
