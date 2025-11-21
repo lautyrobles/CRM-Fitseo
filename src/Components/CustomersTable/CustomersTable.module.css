@@ -301,10 +301,10 @@
 }
 
 .btnPaginador {
-  padding: 8px 14px;
+  padding: 5px 10px;
   border-radius: 8px;
   font-size: 14px;
-  background: #8d8d8d;
+  background: rgba(47, 79, 79, 0.579);
   color: white;
   border: none;
   cursor: pointer;
