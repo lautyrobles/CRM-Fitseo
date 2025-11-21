@@ -1,47 +1,26 @@
-// src/pages/Pagos/Pagos.jsx
 import React, { useEffect, useState } from "react";
 import styles from "./Pagos.module.css";
 import api from "../../assets/services/api";
+import Loader from "../../Components/Loader/Loader";
 import { useAuth } from "../../context/AuthContext";
-import Loader from "../../Components/Loader/Loader"; // ajustá el path si lo tenés distinto
+
+// Servicio cliente
+import { obtenerClientePorDocumento } from "../../assets/services/clientesService";
 
 const Pagos = () => {
   const { user } = useAuth();
   const role = user?.roles?.[0] || user?.role || "USER";
 
-  const canRegisterPayments = ["SUPER_ADMIN", "ADMIN", "SUPERVISOR"].includes(
-    role
-  );
-  const canApplyLateFees = ["SUPER_ADMIN", "ADMIN"].includes(role);
+  const canRegisterPayments = ["SUPER_ADMIN", "ADMIN", "SUPERVISOR"].includes(role);
 
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingLateFee, setLoadingLateFee] = useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-
-  // Filtros
-  const [filtros, setFiltros] = useState({
-    search: "",
-    estado: "TODOS",
-    metodo: "TODOS",
-  });
-
-  // Formulario de nuevo pago
-  const [nuevoPago, setNuevoPago] = useState({
-    clienteDocumento: "",
-    clienteNombre: "",
-    planNombre: "",
-    monto: "",
-    metodoPago: "EFECTIVO",
-    fechaPago: "",
-    estado: "PAGADO",
-    nota: "",
-  });
-
-  // 🔹 Toasts simples
   const mostrarToast = (msg, tipo = "error") => {
     if (tipo === "error") {
       setError(msg);
@@ -53,20 +32,31 @@ const Pagos = () => {
     setTimeout(() => {
       setError("");
       setSuccess("");
-    }, 4000);
+    }, 3500);
   };
 
-  // =====================================================
-  // 🔹 CARGAR PAGOS INICIALES
-  // =====================================================
+  const [nuevoPago, setNuevoPago] = useState({
+    clienteDocumento: "",
+    clienteNombre: "",
+    planNombre: "",
+    periodo: "",
+    fechaPago: "",
+    montoFinal: "",
+    metodoPago: "EFECTIVO",
+    comprobante: "",
+    currentPlan: null // 🔵 preparado para backend
+  });
+
+  // ===============================================================
+  // CARGAR PAGOS
+  // ===============================================================
   const cargarPagos = async () => {
     try {
       setLoading(true);
       const res = await api.get("/payments");
       setPagos(res.data || []);
     } catch (e) {
-      console.error("Error al cargar pagos:", e);
-      mostrarToast("No se pudieron cargar los pagos.", "error");
+      mostrarToast("❌ Error al cargar los pagos.", "error");
     } finally {
       setLoading(false);
     }
@@ -76,242 +66,230 @@ const Pagos = () => {
     cargarPagos();
   }, []);
 
-  // =====================================================
-  // 🔹 MANEJO FORMULARIO NUEVO PAGO
-  // =====================================================
-  const handleChangeFiltro = (e) => {
-    const { name, value } = e.target;
-    setFiltros((prev) => ({ ...prev, [name]: value }));
+  // ===============================================================
+  // BUSCAR CLIENTE
+  // ===============================================================
+  const buscarCliente = async () => {
+    const dni = nuevoPago.clienteDocumento.trim();
+
+    if (!dni) return mostrarToast("Ingresá un DNI.", "error");
+
+    try {
+      const cliente = await obtenerClientePorDocumento(dni);
+
+      if (!cliente) {
+        mostrarToast("Cliente no encontrado.", "error");
+        return;
+      }
+
+      console.log("🟦 DEBUG CLIENTE →", cliente);
+
+      setNuevoPago((prev) => ({
+        ...prev,
+        clienteNombre: `${cliente.name} ${cliente.lastName}`,
+        planNombre: cliente.namePlan || "-",
+        currentPlan: cliente.currentPlan || null // 🔵 future-proof
+      }));
+
+      mostrarToast("Cliente encontrado ✓", "success");
+
+    } catch (e) {
+      mostrarToast("Error buscando cliente.", "error");
+    }
   };
 
+  // ===============================================================
+  // HANDLERS
+  // ===============================================================
   const handleChangeNuevoPago = (e) => {
     const { name, value } = e.target;
     setNuevoPago((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmitPago = async (e) => {
+  const abrirConfirmacion = (e) => {
     e.preventDefault();
 
     if (
       !nuevoPago.clienteDocumento ||
       !nuevoPago.clienteNombre ||
-      !nuevoPago.monto ||
-      !nuevoPago.fechaPago
+      !nuevoPago.periodo ||
+      !nuevoPago.fechaPago ||
+      !nuevoPago.montoFinal
     ) {
-      mostrarToast(
-        "Completá al menos: cliente, documento, monto y fecha de pago.",
-        "error"
-      );
-      return;
+      return mostrarToast("Completá todos los campos.", "error");
     }
 
+    setShowConfirmPopup(true);
+  };
+
+  // ===============================================================
+  // CONFIRMAR PAGO (POST)
+  // ===============================================================
+  const confirmarPago = async () => {
     try {
       const payload = {
-        clientDocument: nuevoPago.clienteDocumento,
-        clientName: nuevoPago.clienteNombre,
-        planName: nuevoPago.planNombre || null,
-        amount: Number(nuevoPago.monto),
-        method: nuevoPago.metodoPago,
+        period: nuevoPago.periodo,
         paymentDate: nuevoPago.fechaPago,
-        status: nuevoPago.estado,
-        note: nuevoPago.nota || null,
+        baseAmount: Number(nuevoPago.montoFinal),
+        discountApplied: 0,
+        finalAmount: Number(nuevoPago.montoFinal),
+        paymentMethod: nuevoPago.metodoPago,
+        paymentStatus: "CONFIRMADO",
+        note: nuevoPago.comprobante || null,
+        client: {
+          document: Number(nuevoPago.clienteDocumento),
+
+          // 🔵 Esta parte funcionará cuando el backend la active:
+          currentPlan: nuevoPago.currentPlan
+            ? {
+                idPlan: nuevoPago.currentPlan.idPlan || null,
+                namePlan: nuevoPago.currentPlan.namePlan || nuevoPago.planNombre,
+                value: nuevoPago.currentPlan.value || Number(nuevoPago.montoFinal)
+              }
+            : null
+        }
       };
+
+      console.log("📦 PAYLOAD FINAL →", payload);
 
       const res = await api.post("/payments", payload);
 
       setPagos((prev) => [res.data, ...prev]);
-      mostrarToast("Pago registrado correctamente ✅", "success");
+
+      mostrarToast("Pago registrado ✔", "success");
+      setShowConfirmPopup(false);
 
       setNuevoPago({
         clienteDocumento: "",
         clienteNombre: "",
         planNombre: "",
-        monto: "",
-        metodoPago: "EFECTIVO",
+        periodo: "",
         fechaPago: "",
-        estado: "PAGADO",
-        nota: "",
+        montoFinal: "",
+        metodoPago: "EFECTIVO",
+        comprobante: "",
+        currentPlan: null
       });
+
       setMostrarFormulario(false);
+
     } catch (e) {
-      console.error("Error al registrar pago:", e);
-      const backendMsg =
-        e.response?.data?.message || e.response?.data?.error || "";
-      mostrarToast(
-        backendMsg || "No se pudo registrar el pago. Intentá nuevamente.",
-        "error"
-      );
+      mostrarToast("❌ Error al registrar el pago.", "error");
+      console.error("❌ BACKEND ERROR:", e);
     }
   };
 
-  // =====================================================
-  // 🔹 APLICAR RECARGOS (MULTAS)
-  // =====================================================
-  const handleApplyLateFees = async () => {
-    if (!canApplyLateFees) return;
+  const cancelarPopup = () => setShowConfirmPopup(false);
 
-    if (
-      !window.confirm(
-        "¿Aplicar recargos a todos los pagos vencidos? Esta acción no se puede deshacer."
-      )
-    )
-      return;
-
-    try {
-      setLoadingLateFee(true);
-      await api.post("/payments/apply-late-fees");
-      mostrarToast("Recargos aplicados correctamente.", "success");
-      await cargarPagos();
-    } catch (e) {
-      console.error("Error al aplicar recargos:", e);
-      const backendMsg =
-        e.response?.data?.message || e.response?.data?.error || "";
-      mostrarToast(
-        backendMsg ||
-          "No se pudieron aplicar los recargos. Intentá nuevamente.",
-        "error"
-      );
-    } finally {
-      setLoadingLateFee(false);
-    }
-  };
-
-  // =====================================================
-  // 🔹 FILTRADO EN FRONT
-  // =====================================================
-  const pagosFiltrados = pagos.filter((p) => {
-    const search = filtros.search.trim().toLowerCase();
-    const estado = filtros.estado;
-    const metodo = filtros.metodo;
-
-    const matchSearch =
-      !search ||
-      (p.clientName && p.clientName.toLowerCase().includes(search)) ||
-      (p.clientDocument &&
-        String(p.clientDocument).toLowerCase().includes(search));
-
-    const matchEstado =
-      estado === "TODOS" ||
-      !p.status ||
-      p.status.toUpperCase() === estado.toUpperCase();
-
-    const matchMetodo =
-      metodo === "TODOS" ||
-      !p.method ||
-      p.method.toUpperCase() === metodo.toUpperCase();
-
-    return matchSearch && matchEstado && matchMetodo;
-  });
-
-  const formatCurrency = (value) => {
-    if (value == null) return "-";
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const formatDate = (value) => {
-    if (!value) return "-";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "-";
-    return d.toLocaleDateString("es-AR");
-  };
-
+  // ===============================================================
+  // RENDER
+  // ===============================================================
   return (
     <section className={styles.pagosContainer}>
+      
       {/* Toasts */}
       <div className={styles.toastContainer}>
-        {success && (
-          <div className={`${styles.toast} ${styles.toastSuccess}`}>
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className={`${styles.toast} ${styles.toastError}`}>{error}</div>
-        )}
+        {success && <div className={`${styles.toast} ${styles.toastSuccess}`}>{success}</div>}
+        {error && <div className={`${styles.toast} ${styles.toastError}`}>{error}</div>}
       </div>
 
       {/* Header */}
       <div className={styles.header}>
         <div>
           <h2>Gestión de pagos</h2>
-          <p className={styles.subtitle}>
-            Registrá cobros de manera rápida y visualizá el historial de pagos.
-          </p>
+          <p className={styles.subtitle}>Registrá cobros y visualizá el historial.</p>
         </div>
 
-        <div className={styles.headerActions}>
-          {canApplyLateFees && (
-            <button
-              className={styles.btnOutline}
-              onClick={handleApplyLateFees}
-              disabled={loadingLateFee}
-            >
-              {loadingLateFee ? "Aplicando recargos..." : "Aplicar recargos"}
-            </button>
-          )}
-
-          {canRegisterPayments && (
-            <button
-              className={styles.btnPrimary}
-              onClick={() => setMostrarFormulario((prev) => !prev)}
-            >
-              {mostrarFormulario ? "Cancelar" : "+ Registrar pago"}
-            </button>
-          )}
-        </div>
+        {canRegisterPayments && (
+          <button
+            className={styles.btnPrimary}
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+          >
+            {mostrarFormulario ? "Cancelar" : "+ Registrar pago"}
+          </button>
+        )}
       </div>
 
-      {/* Formulario registrar pago */}
-      {mostrarFormulario && canRegisterPayments && (
-        <form className={styles.formContainer} onSubmit={handleSubmitPago}>
+      {/* Formulario */}
+      {mostrarFormulario && (
+        <form className={styles.formContainer} onSubmit={abrirConfirmacion}>
+          {/* DNI */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Documento del cliente</label>
-              <input
-                type="text"
-                name="clienteDocumento"
-                placeholder="DNI / CUIT"
-                value={nuevoPago.clienteDocumento}
-                onChange={handleChangeNuevoPago}
-              />
+              <label>DNI del cliente</label>
+              <div className={styles.dniSearchContainer}>
+                <input
+                  type="text"
+                  name="clienteDocumento"
+                  value={nuevoPago.clienteDocumento}
+                  onChange={handleChangeNuevoPago}
+                  placeholder="45123872"
+                />
+                <button type="button" className={styles.searchBtn} onClick={buscarCliente}>
+                  🔍
+                </button>
+              </div>
             </div>
 
+            {/* Nombre */}
             <div className={styles.formGroup}>
-              <label>Nombre del cliente</label>
+              <label>Nombre y apellido</label>
               <input
                 type="text"
                 name="clienteNombre"
-                placeholder="Nombre y apellido"
                 value={nuevoPago.clienteNombre}
+                onChange={handleChangeNuevoPago}
+                placeholder="Nombre del cliente"
+                disabled
+              />
+            </div>
+
+            {/* Plan */}
+            <div className={styles.formGroup}>
+              <label>Plan vigente</label>
+              <input
+                type="text"
+                name="planNombre"
+                value={nuevoPago.planNombre}
+                placeholder="Plan del cliente"
+                disabled
+              />
+            </div>
+          </div>
+
+          {/* Periodo + Fecha */}
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label>Período</label>
+              <input
+                type="date"
+                name="periodo"
+                value={nuevoPago.periodo}
                 onChange={handleChangeNuevoPago}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label>Plan</label>
+              <label>Fecha de pago</label>
               <input
-                type="text"
-                name="planNombre"
-                placeholder="Mensual / Trimestral / Anual..."
-                value={nuevoPago.planNombre}
+                type="date"
+                name="fechaPago"
+                value={nuevoPago.fechaPago}
                 onChange={handleChangeNuevoPago}
               />
             </div>
           </div>
 
+          {/* Monto + Método */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Monto</label>
+              <label>Monto final</label>
               <input
                 type="number"
-                name="monto"
-                placeholder="Monto abonado"
-                value={nuevoPago.monto}
+                name="montoFinal"
+                value={nuevoPago.montoFinal}
                 onChange={handleChangeNuevoPago}
-                min="0"
+                placeholder="Ej: 5000"
               />
             </div>
 
@@ -324,144 +302,86 @@ const Pagos = () => {
               >
                 <option value="EFECTIVO">Efectivo</option>
                 <option value="TRANSFERENCIA">Transferencia</option>
-                <option value="MERCADO_PAGO">Mercado Pago / QR</option>
-                <option value="DEBITO">Débito</option>
-                <option value="CREDITO">Crédito</option>
+                <option value="MERCADO_PAGO">Mercado Pago</option>
+                <option value="TARJETA_DEBITO">Débito</option>
+                <option value="TARJETA_CREDITO">Crédito</option>
               </select>
             </div>
 
             <div className={styles.formGroup}>
-              <label>Fecha de pago</label>
+              <label>N° comprobante</label>
               <input
-                type="date"
-                name="fechaPago"
-                value={nuevoPago.fechaPago}
+                type="text"
+                name="comprobante"
+                value={nuevoPago.comprobante}
                 onChange={handleChangeNuevoPago}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Estado</label>
-              <select
-                name="estado"
-                value={nuevoPago.estado}
-                onChange={handleChangeNuevoPago}
-              >
-                <option value="PAGADO">Pagado</option>
-                <option value="PENDIENTE">Pendiente</option>
-                <option value="VENCIDO">Vencido</option>
-              </select>
-            </div>
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label>Notas (opcional)</label>
-              <textarea
-                name="nota"
-                placeholder="Ej: abonó con billete grande, dejar comprobante en caja…"
-                value={nuevoPago.nota}
-                onChange={handleChangeNuevoPago}
-                rows={2}
+                placeholder="Ej: #ABC-123"
               />
             </div>
           </div>
 
           <div className={styles.formActions}>
-            <button type="submit" className={styles.btnPrimary}>
-              Guardar pago
-            </button>
+            <button className={styles.btnPrimary}>Continuar</button>
           </div>
         </form>
       )}
 
-      {/* Filtros + Tabla */}
-      <div className={styles.card}>
-        <div className={styles.filtrosContainer}>
-          <input
-            type="text"
-            name="search"
-            placeholder="Buscar por nombre o documento..."
-            value={filtros.search}
-            onChange={handleChangeFiltro}
-          />
+      {/* POPUP */}
+      {showConfirmPopup && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Confirmar pago</h3>
 
-          <select
-            name="estado"
-            value={filtros.estado}
-            onChange={handleChangeFiltro}
-          >
-            <option value="TODOS">Estado: Todos</option>
-            <option value="PAGADO">Pagado</option>
-            <option value="PENDIENTE">Pendiente</option>
-            <option value="VENCIDO">Vencido</option>
-          </select>
+            <p><b>DNI:</b> {nuevoPago.clienteDocumento}</p>
+            <p><b>Cliente:</b> {nuevoPago.clienteNombre}</p>
+            <p><b>Plan:</b> {nuevoPago.planNombre}</p>
+            <p><b>Periodo:</b> {nuevoPago.periodo}</p>
+            <p><b>Monto:</b> ${nuevoPago.montoFinal}</p>
+            <p><b>Método:</b> {nuevoPago.metodoPago}</p>
+            <p><b>Fecha:</b> {nuevoPago.fechaPago}</p>
+            <p><b>Comprobante:</b> {nuevoPago.comprobante || "-"}</p>
 
-          <select
-            name="metodo"
-            value={filtros.metodo}
-            onChange={handleChangeFiltro}
-          >
-            <option value="TODOS">Método: Todos</option>
-            <option value="EFECTIVO">Efectivo</option>
-            <option value="TRANSFERENCIA">Transferencia</option>
-            <option value="MERCADO_PAGO">Mercado Pago / QR</option>
-            <option value="DEBITO">Débito</option>
-            <option value="CREDITO">Crédito</option>
-          </select>
+            <div className={styles.modalActions}>
+              <button className={styles.btnOutline} onClick={cancelarPopup}>Cancelar</button>
+              <button className={styles.btnPrimary} onClick={confirmarPago}>Confirmar pago</button>
+            </div>
+          </div>
         </div>
+      )}
 
+      {/* Tabla */}
+      <div className={styles.card}>
         {loading ? (
           <Loader text="Cargando pagos..." />
-        ) : pagosFiltrados.length > 0 ? (
+        ) : pagos.length > 0 ? (
           <div className={styles.tableWrapper}>
             <table className={styles.tablaPagos}>
               <thead>
                 <tr>
                   <th>Cliente</th>
-                  <th>Documento</th>
+                  <th>DNI</th>
                   <th>Plan</th>
                   <th>Método</th>
-                  <th>Estado</th>
                   <th>Monto</th>
-                  <th>Fecha pago</th>
+                  <th>Fecha</th>
                 </tr>
               </thead>
               <tbody>
-                {pagosFiltrados.map((pago) => (
-                  <tr key={pago.id}>
-                    <td>{pago.clientName || "-"}</td>
-                    <td>{pago.clientDocument || "-"}</td>
-                    <td>{pago.planName || "-"}</td>
-                    <td>
-                      <span className={styles.metodoTag}>
-                        {pago.method || "-"}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.statusPill} ${
-                          styles[
-                            (pago.status || "PENDIENTE")
-                              .toLowerCase()
-                              .replace(" ", "")
-                          ]
-                        }`}
-                      >
-                        {pago.status || "Pendiente"}
-                      </span>
-                    </td>
-                    <td>{formatCurrency(pago.amount)}</td>
-                    <td>{formatDate(pago.paymentDate)}</td>
+                {pagos.map((p) => (
+                  <tr key={p.idPayment}>
+                    <td>{p.clientName}</td>
+                    <td>{p.clientDocument}</td>
+                    <td>{p.planName}</td>
+                    <td>{p.paymentMethod}</td>
+                    <td>${p.finalAmount}</td>
+                    <td>{p.paymentDate}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className={styles.placeholderBox}>
-            <p>📭 No hay pagos que coincidan con los filtros.</p>
-          </div>
+          <p>No hay pagos registrados.</p>
         )}
       </div>
     </section>

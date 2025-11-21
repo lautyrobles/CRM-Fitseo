@@ -4,9 +4,9 @@
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  width: calc(100% - 0px);      /* 🔹 Ocupa todo el ancho disponible como Configuración */
+  width: calc(100% - 0px);
   margin: 20px auto;
-  margin-left: 20px;            /* 🔹 Deja el mismo margen respecto al sidebar */
+  margin-left: 20px;
   font-family: "Inter", sans-serif;
   color: #263640;
   display: flex;
@@ -206,6 +206,28 @@
   margin-top: 4px;
 }
 
+/* DNI + botón de búsqueda */
+.dniSearchContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchBtn {
+  background: #263640;
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.searchBtn:hover {
+  background: #1c2832;
+}
+
 /* Tabla */
 .tableWrapper {
   overflow-x: auto;
@@ -276,6 +298,33 @@
   border-radius: 12px;
   text-align: center;
   color: #888;
+}
+
+/* Popup Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal {
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  width: 420px;
+  max-width: 90%;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
 }
 
 /* Responsive */
