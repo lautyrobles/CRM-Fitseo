@@ -117,46 +117,45 @@ const CustomersTable = () => {
   /* ===================================================
      🔹 Crear o actualizar cliente
      =================================================== */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validarCampos()) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validarCampos()) return;
 
-    try {
-      setSaving(true);
+  try {
+    setSaving(true);
 
-      const clienteBody = {
-        document: parseInt(nuevoUsuario.document),
-        name: nuevoUsuario.name,
-        lastName: nuevoUsuario.lastName,
-        email: nuevoUsuario.email,
-        phoneNumber: nuevoUsuario.phoneNumber,
-        isActive: nuevoUsuario.isActive === true,
-        currentPlan: { idPlan: parseInt(nuevoUsuario.idPlan) },
-      };
+    const clienteBody = {
+      document: parseInt(nuevoUsuario.document),
+      name: nuevoUsuario.name,
+      lastName: nuevoUsuario.lastName,
+      email: nuevoUsuario.email,
+      phoneNumber: nuevoUsuario.phoneNumber,
+      isActive: nuevoUsuario.isActive === true,
+      idPlan: parseInt(nuevoUsuario.idPlan),   // 🔥 cambio clave
+    };
 
-      // 🚫 YA NO SE ENVÍA CONTRASEÑA
-
-      if (editIndex !== null) {
-        const usuarioEditado = usuarios[editIndex];
-        await actualizarCliente(usuarioEditado.document, clienteBody);
-        mostrarToast("✅ Usuario actualizado correctamente");
-      } else {
-        await crearCliente(clienteBody);
-        mostrarToast("✅ Usuario creado exitosamente");
-      }
-
-      await fetchData();
-
-      setMostrarFormulario(false);
-      limpiarFormulario();
-      setEditIndex(null);
-    } catch (error) {
-      console.error("❌ Error en el envío:", error);
-      mostrarToast("❌ Error al guardar usuario", "error");
-    } finally {
-      setSaving(false);
+    if (editIndex !== null) {
+      const usuarioEditado = usuarios[editIndex];
+      await actualizarCliente(usuarioEditado.document, clienteBody);
+      mostrarToast("✅ Usuario actualizado correctamente");
+    } else {
+      await crearCliente(clienteBody);
+      mostrarToast("✅ Usuario creado exitosamente");
     }
-  };
+
+    await fetchData();
+
+    setMostrarFormulario(false);
+    limpiarFormulario();
+    setEditIndex(null);
+  } catch (error) {
+    console.error("❌ Error en el envío:", error);
+    mostrarToast("❌ Error al guardar usuario", "error");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   /* ===================================================
      🔹 Editar usuario
