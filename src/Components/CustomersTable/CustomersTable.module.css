@@ -292,4 +292,34 @@
   100% { transform: rotate(360deg); }
 }
 
+.paginador {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.btnPaginador {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #8d8d8d;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btnPaginador:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.paginaActual {
+  font-size: 14px;
+  font-weight: 600;
+  color: #263640;
+}
+
 

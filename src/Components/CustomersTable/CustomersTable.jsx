@@ -20,16 +20,15 @@ const CustomersTable = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const itemsPerPage = mostrarFormulario ? 6 : 7;
+  const itemsPerPage = mostrarFormulario ? 6 : 7; // fijo para evitar confusión
 
-  // 🔹 Estado inicial SIN CONTRASEÑA
+  // Estado inicial del usuario
   const [nuevoUsuario, setNuevoUsuario] = useState({
     document: "",
     name: "",
     lastName: "",
     email: "",
     phoneNumber: "",
-    isActive: true,
     idPlan: "",
   });
 
@@ -57,6 +56,27 @@ const CustomersTable = () => {
   }, []);
 
   /* ===================================================
+     🔹 Resolver nombre del plan aunque backend no lo mande
+     =================================================== */
+  const resolverNombrePlan = (u) => {
+    if (u.namePlan) return u.namePlan;
+
+    if (u.idPlan) {
+      const plan = planesDisponibles.find((p) => p.idPlan === u.idPlan);
+      if (plan) return plan.namePlan;
+    }
+
+    if (u.currentPlan?.idPlan) {
+      const plan = planesDisponibles.find(
+        (p) => p.idPlan === u.currentPlan.idPlan
+      );
+      if (plan) return plan.namePlan;
+    }
+
+    return "-";
+  };
+
+  /* ===================================================
      🔹 Manejo del formulario
      =================================================== */
   const limpiarFormulario = () => {
@@ -66,7 +86,6 @@ const CustomersTable = () => {
       lastName: "",
       email: "",
       phoneNumber: "",
-      isActive: true,
       idPlan: "",
     });
   };
@@ -87,7 +106,7 @@ const CustomersTable = () => {
     const { name, value } = e.target;
     setNuevoUsuario({
       ...nuevoUsuario,
-      [name]: name === "isActive" ? value === "true" : value,
+      [name]: value,
     });
   };
 
@@ -101,67 +120,65 @@ const CustomersTable = () => {
      =================================================== */
   const validarCampos = () => {
     if (
+      !nuevoUsuario.document ||
       !nuevoUsuario.name ||
       !nuevoUsuario.lastName ||
       !nuevoUsuario.email ||
-      !nuevoUsuario.document ||
       !nuevoUsuario.idPlan
     ) {
       mostrarToast("⚠️ Todos los campos son obligatorios.", "error");
       return false;
     }
-
     return true;
   };
 
   /* ===================================================
      🔹 Crear o actualizar cliente
      =================================================== */
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validarCampos()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validarCampos()) return;
 
-  try {
-    setSaving(true);
+    try {
+      setSaving(true);
 
-    const clienteBody = {
-      document: parseInt(nuevoUsuario.document),
-      name: nuevoUsuario.name,
-      lastName: nuevoUsuario.lastName,
-      email: nuevoUsuario.email,
-      phoneNumber: nuevoUsuario.phoneNumber,
-      isActive: nuevoUsuario.isActive === true,
-      idPlan: parseInt(nuevoUsuario.idPlan),   // 🔥 cambio clave
-    };
+      const clienteBody = {
+        document: parseInt(nuevoUsuario.document),
+        name: nuevoUsuario.name,
+        lastName: nuevoUsuario.lastName,
+        email: nuevoUsuario.email,
+        phoneNumber: nuevoUsuario.phoneNumber,
+        isActive: true,
+        currentPlan: { idPlan: parseInt(nuevoUsuario.idPlan) },
+      };
 
-    if (editIndex !== null) {
-      const usuarioEditado = usuarios[editIndex];
-      await actualizarCliente(usuarioEditado.document, clienteBody);
-      mostrarToast("✅ Usuario actualizado correctamente");
-    } else {
-      await crearCliente(clienteBody);
-      mostrarToast("✅ Usuario creado exitosamente");
+      if (editIndex !== null) {
+        const usuarioEditado = usuarios[editIndex];
+        await actualizarCliente(usuarioEditado.document, clienteBody);
+        mostrarToast("✅ Usuario actualizado correctamente");
+      } else {
+        await crearCliente(clienteBody);
+        mostrarToast("✅ Usuario creado exitosamente");
+      }
+
+      await fetchData();
+      limpiarFormulario();
+      setMostrarFormulario(false);
+      setEditIndex(null);
+    } catch (error) {
+      console.error("❌ Error en el envío:", error);
+      mostrarToast("❌ Error al guardar usuario", "error");
+    } finally {
+      setSaving(false);
     }
-
-    await fetchData();
-
-    setMostrarFormulario(false);
-    limpiarFormulario();
-    setEditIndex(null);
-  } catch (error) {
-    console.error("❌ Error en el envío:", error);
-    mostrarToast("❌ Error al guardar usuario", "error");
-  } finally {
-    setSaving(false);
-  }
-};
-
+  };
 
   /* ===================================================
      🔹 Editar usuario
      =================================================== */
   const editarUsuario = (index) => {
     const cliente = usuarios[index];
+
     const planSeleccionado =
       planesDisponibles.find((p) => p.namePlan === cliente.namePlan)?.idPlan ||
       "";
@@ -172,7 +189,6 @@ const handleSubmit = async (e) => {
       lastName: cliente.lastName,
       email: cliente.email,
       phoneNumber: cliente.phoneNumber,
-      isActive: cliente.status === "Activo",
       idPlan: planSeleccionado,
     });
 
@@ -189,6 +205,7 @@ const handleSubmit = async (e) => {
 
   const siguientePagina = () =>
     currentPage < totalPaginas && setCurrentPage(currentPage + 1);
+
   const anteriorPagina = () =>
     currentPage > 1 && setCurrentPage(currentPage - 1);
 
@@ -212,12 +229,7 @@ const handleSubmit = async (e) => {
           <h3>Gestión de Usuarios</h3>
 
           {editIndex === null ? (
-            <button
-              className={`${styles.btnCrear} ${
-                editIndex !== null ? styles.btnBloqueado : ""
-              }`}
-              onClick={toggleFormulario}
-            >
+            <button className={styles.btnCrear} onClick={toggleFormulario}>
               {mostrarFormulario ? "Cancelar" : "+ Crear usuario"}
             </button>
           ) : (
@@ -245,6 +257,7 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   disabled={editIndex !== null}
                 />
+
                 <input
                   type="text"
                   name="name"
@@ -252,6 +265,7 @@ const handleSubmit = async (e) => {
                   value={nuevoUsuario.name}
                   onChange={handleChange}
                 />
+
                 <input
                   type="text"
                   name="lastName"
@@ -259,6 +273,7 @@ const handleSubmit = async (e) => {
                   value={nuevoUsuario.lastName}
                   onChange={handleChange}
                 />
+
                 <input
                   type="email"
                   name="email"
@@ -266,6 +281,7 @@ const handleSubmit = async (e) => {
                   value={nuevoUsuario.email}
                   onChange={handleChange}
                 />
+
                 <input
                   type="text"
                   name="phoneNumber"
@@ -273,8 +289,6 @@ const handleSubmit = async (e) => {
                   value={nuevoUsuario.phoneNumber}
                   onChange={handleChange}
                 />
-
-                {/* 🚫 Campo contraseña ELIMINADO */}
 
                 <select
                   name="idPlan"
@@ -289,15 +303,6 @@ const handleSubmit = async (e) => {
                   ))}
                 </select>
 
-                <select
-                  name="isActive"
-                  value={nuevoUsuario.isActive ? "true" : "false"}
-                  onChange={handleChange}
-                >
-                  <option value="true">Activo</option>
-                  <option value="false">Inactivo</option>
-                </select>
-
                 <button type="submit" className={styles.btnConfirmar}>
                   {editIndex !== null ? "Guardar cambios" : "Confirmar"}
                 </button>
@@ -306,62 +311,92 @@ const handleSubmit = async (e) => {
 
             {/* TABLA */}
             {usuarios.length > 0 ? (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>DNI</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>Plan</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
+              <>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>DNI</th>
+                      <th>Nombre</th>
+                      <th>Apellido</th>
+                      <th>Email</th>
+                      <th>Teléfono</th>
+                      <th>Plan</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {usuariosPagina.map((u, i) => {
-                    const indexReal = inicio + i;
-                    const isEditing = editIndex === indexReal;
-                    const isActive = u.status === "Activo";
+                  <tbody>
+                    {usuariosPagina.map((u, i) => {
+                      const indexReal = inicio + i;
+                      const isEditing = editIndex === indexReal;
+                      const isActive = u.status === "Activo";
 
-                    return (
-                      <tr
-                        key={u.document}
-                        className={isEditing ? styles.editingRow : ""}
-                      >
-                        <td>{u.document}</td>
-                        <td>{u.name}</td>
-                        <td>{u.lastName}</td>
-                        <td>{u.email}</td>
-                        <td>{u.phoneNumber}</td>
-                        <td>{u.namePlan || "-"}</td>
-                        <td>
-                          <span
-                            className={
-                              isActive ? styles.active : styles.inactive
-                            }
-                          >
-                            {u.status}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className={styles.btnEditar}
-                            onClick={() => editarUsuario(indexReal)}
-                            disabled={
-                              editIndex !== null && editIndex !== indexReal
-                            }
-                          >
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      return (
+                        <tr
+                          key={u.document}
+                          className={isEditing ? styles.editingRow : ""}
+                        >
+                          <td>{u.document}</td>
+                          <td>{u.name}</td>
+                          <td>{u.lastName}</td>
+                          <td>{u.email}</td>
+                          <td>{u.phoneNumber}</td>
+
+                          <td>{resolverNombrePlan(u)}</td>
+
+                          <td>
+                            <span
+                              className={
+                                isActive ? styles.active : styles.inactive
+                              }
+                            >
+                              {u.status}
+                            </span>
+                          </td>
+
+                          <td>
+                            <button
+                              className={styles.btnEditar}
+                              onClick={() => editarUsuario(indexReal)}
+                              disabled={
+                                editIndex !== null && editIndex !== indexReal
+                              }
+                            >
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* PAGINADOR */}
+                {usuarios.length > itemsPerPage && (
+                  <div className={styles.paginador}>
+                    <button
+                      onClick={anteriorPagina}
+                      disabled={currentPage === 1}
+                      className={styles.btnPaginador}
+                    >
+                      ◀ Anterior
+                    </button>
+
+                    <span className={styles.paginaActual}>
+                      Página {currentPage} de {totalPaginas}
+                    </span>
+
+                    <button
+                      onClick={siguientePagina}
+                      disabled={currentPage === totalPaginas}
+                      className={styles.btnPaginador}
+                    >
+                      Siguiente ▶
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className={styles.placeholderBox}>
                 <p>⚙️ No hay usuarios registrados todavía...</p>
